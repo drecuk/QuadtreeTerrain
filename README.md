@@ -7,7 +7,19 @@ Quadtree Terrain Rendering System with Simple Features: C++, OpenGL, SDL
 ### Audience: For students and researchers needing a quick approach to learning agent-based modelling foundation for C++ and OpenGL
 
 ## INTRODUCTION
-This is a continuation of the series of C++ code in my repositories for the ERC 'Lost Frontiers' Advanced Research Grant. The Quadtree Terrain System is composed of a set of decoupled classes, each for managing objects within the ABM system. 
+The code presented here is now a 'systems-level' development, as a continuation of the series of C++ code in my repositories for the ERC 'Lost Frontiers' Advanced Research Grant. The Quadtree Terrain System is composed of a set of decoupled classes, each for managing objects within the ABM system:
+
+- main.cpp - main code tying everything together
+- QTTerrain.h/cpp - a terrain rendering system
+- TerrainQuadTree.h/cpp - a quadtree datastructure used for managing the procedural terrain
+- Camera.h/cpp - a simple camera for moving around the virtual space
+- Grid.h/cpp - a simple grid used for orientation
+- MoveableOnQTTerrain.h/cpp - an agent used for skating on the surface of the quadtree terrain
+
+## Quadtree Terrain Features
+- Procedura terrain rendering based on a viewrange of the camera, and level of detailing based on distance
+- Terrain functions for calculating surface normals, raycast intersects of planes, etc.
+- A quadtree datastructure built for generating boundaries, quadtree layering, vertice indices, etc.
 
 ## [INSTALLATION](https://github.com/drecuk/ABM-Basics-Installation)
 ## [C++ SDL FOUNDATION](https://github.com/drecuk/ABM-Basics-SDL)
