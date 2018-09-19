@@ -1,6 +1,8 @@
 # QuadtreeTerrain
 Quadtree Terrain Rendering System with Simple Features: C++, OpenGL, SDL
 
+YouTube Video: https://youtu.be/CqmJ9Szk7-o
+
 ### Topic: Object-Oriented C++ integration with SDL and OpenGL for Agent-Based Modelling (ABM)
 ### Author: Eugene Ch'ng [Academic Blog](http://www.complexity.io/)
 ### Purpose: Prepared for the ERC Advanced Research Grant 'Lost Frontiers' Scalable Agent-Based Modelling Team Training.
