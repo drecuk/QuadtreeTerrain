@@ -232,7 +232,8 @@ QTTerrain::QTTerrain(char *terrainFilename, char *TerrainTexFilename, char *wate
 QTTerrain::~QTTerrain()
 {
 	// this is important!!! Can it be freed from within QTTerrainQuadTree.cpp??
-	free(terrainQT->qtNodeArray);
+	// free(terrainQT->qtNodeArray);
+	delete terrainQT;
 	cout<<">> QuadTree structure memory freed!"<<endl;
 
 /*
@@ -971,7 +972,7 @@ bool QTTerrain::LoadTextures(char *TerrainFilename, char *waterFilename)
 void QTTerrain::setViewRange(float value)
 {
 	viewRange += value;
-	cout<<"-- viewRange: "<<viewRange<<endl;
+	//cout<<"-- viewRange: "<<viewRange<<endl;
 }
 
 void QTTerrain::setWireframe()

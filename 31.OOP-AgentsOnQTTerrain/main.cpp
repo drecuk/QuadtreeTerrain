@@ -5,13 +5,13 @@
 //	A C++ Application
 //	OOP + OpenGL integration
 //
-//  Using a Quadtree-based Terrain: Setting up and running it
+//  Quadtree-based Terrain with Predator-Prey-Snacks
 //
 //  ----------------------------------------------------------
 //  How to compile:
 //  note that we are now using both SDL2 and OpenGL, thus the -l for all libraries
 //  we are also using multiple cpp files
-//  sudo g++ -I/usr/include/ main.cpp Camera.cpp TerrainQuadTree.cpp QTTerrain.cpp MoveableOnQTTerrain.cpp Grid.cpp -o main -L/usr/lib -lSDL2 -lGL -lGLU
+//  sudo g++ -I/usr/include/ main.cpp Camera.cpp TerrainQuadTree.cpp QTTerrain.cpp Agent.cpp Predator.cpp Prey.cpp Snack.cpp Grid.cpp -o main -L/usr/lib -lSDL2 -lGL -lGLU
 //
 // -I define the path to the includes folder
 // -L define the path to the library folder
@@ -32,8 +32,11 @@
 #include "OGLUtil.h"
 #include "Grid.h"
 #include "Camera.h"
-#include "MoveableOnQTTerrain.h"
 #include "QTTerrain.h"
+#include "Agent.h"
+#include "Predator.h"
+#include "Prey.h"
+#include "Snack.h"
 
 using namespace std;
 
@@ -51,6 +54,7 @@ void placeBoxOnPlane();
 void drawCube(Vector3f pos, float red, float green, float blue);
 
 void setupAmbientLight();
+
 
 // ----------------------- Light Variables
 GLfloat ambientLight[] = {0.5f, 0.5f, 0.5f, 1.0f};
@@ -74,10 +78,6 @@ Grid *grid;			    // declare grid
 // background colour starts with black
 float r, g, b = 0.0f;
 
-Matrix4x4 mCube;
-
-MoveableOnQTTerrain *moveable;
-
 // ----------------------- Terrain
 QTTerrain *terrain;
 
@@ -85,9 +85,6 @@ QTTerrain *terrain;
 int main(int argc, char**argv)
 {
     cout<<"*********************** Initialising Scene Utility ***********************"<<endl;
-
-    // instantiating the camera
-    camera = new Camera(Vector3f(0, 30.0f, 100.0f), Vector3f(0.0f, 0.0f, -1.0f), 0.5f, 3.0f, 20.0f);
 
     cout<<"*********************** Create a Terrain ***********************"<<endl;
     char heightMapFile[] = "terr512.raw";
@@ -97,21 +94,118 @@ int main(int argc, char**argv)
     float terrain_Scale = 15.0f;
     terrain = new QTTerrain(heightMapFile, terrainWidth, terrainLength, terrainHeightScale, terrain_Scale, NORMAL_SMOOTH);
 
+    cout<<"*********************** Create a Camera ***********************"<<endl;
+    camera = new Camera(Vector3f(0, 30.0f, 100.0f), Vector3f(0.0f, 0.0f, -1.0f), 0.5f, 3.0f, 20.0f);
+
     // set camera on top of terrain
     float cameraEyeHeight = terrain->getHeight(camera->getPosition()) + 30.0f;
     cout<<"Camera Eye Height: "<<cameraEyeHeight<<endl;
-
     camera->setEyeHeight(cameraEyeHeight);
 
+    cout<<"*********************** Create a Grid ***********************"<<endl;
     //  instantiate grid
     float gridWidth = 512.0f;
     float gridLength = 512.0f;
     float gridSpacing = 16.0f;
     grid = new Grid(gridWidth*terrain_Scale, gridLength*terrain_Scale, gridSpacing);
 
-    cout<<"*********************** Initialising Object ***********************"<<endl;
-    moveable = new MoveableOnQTTerrain(1, 0, 0, 0, 0.5f);
-    moveable->getTerrain(terrain);
+    cout<<"*********************** Initialising Agents ***********************"<<endl;
+    // instantiate n agents and assign them arbitrary speed
+    // derived classes
+    int noPred = 30;
+    int noPrey = 40;
+    int noSnack = 60;
+    int agentNo = noPred + noPrey + noSnack;
+    cout<<"-- Total number of agents: "<<agentNo<<endl;
+    cout<<"-- Number of Predator: "<<noPred<<endl;
+    cout<<"-- Number of Prey: "<<noPrey<<endl;
+    cout<<"-- Number of Snacks: "<<noSnack<<endl;
+
+    // this needs not be instantiated
+    // the derived types are assigned to the array later
+    Agent **agents = new Agent*[agentNo];
+    // for(int i=0; i<agentNo; i++)
+    //   agents[i] = new Agent(1, 0, 0, 0, 0.001f);
+
+    Predator **predators = new Predator*[noPred];
+    Prey **preys = new Prey*[noPrey];
+    Snack **snacks = new Snack*[noSnack];
+
+    // 1st Loop: create agents types first
+    cout<<"----- Creating Types"<< endl;
+    for(int i=0; i<agentNo; i++)
+    {
+      if(i<noPred) //30
+      {
+        // randomise location of snacks
+    		int min = grid->getBottom();
+    		int max = grid->getBottom() + grid->getBottom();
+
+    		int newX = (rand()%max)-min;
+    		int newZ = (rand()%max)-min;
+        cout<<"creating predator "<<i<<endl;
+        predators[i] = new Predator(i, newX, 0, newZ, 0.5f);
+      }
+      else if(i>=noPred && i<noPred+noPrey)
+      {
+        // randomise location of snacks
+    		int min = grid->getBottom();
+    		int max = grid->getBottom() + grid->getBottom();
+
+    		int newX = (rand()%max)-min;
+    		int newZ = (rand()%max)-min;
+        cout<<i<<">="<<noPred<<" && "<<i<<"<"<<noPred+noPrey;
+        cout<<" | creating prey "<<i<<" | actual index: "<<i-noPred<<endl;
+        preys[i-noPred] = new Prey(i, newX, 0, newZ, 0.5f);
+      }
+      else if(i>=noPred+noPrey)
+      {
+        // randomise location of snacks
+        int min = grid->getBottom();
+    		int max = grid->getBottom() + grid->getBottom();
+
+    		int newX = (rand()%max)-min;
+    		int newZ = (rand()%max)-min;
+
+        cout<<"creating snacks "<<i<<" | actual index: "<<i-(noPred+noPrey)<<endl;
+        snacks[i-(noPred+noPrey)] = new Snack(i, newX, 0, newZ, 0.0f);
+      }
+    }
+
+    cout << "----- Deriving Types" << endl;
+    for(int i=0; i<agentNo; i++)
+    {
+      if(i<noPred)
+      {
+        cout<<"-- deriving predators["<<i<<"] "<<predators[i]<<endl;
+        agents[i] = predators[i];   // fishes[i] is the address
+        agents[i]->speciesType = PREDATOR;
+      }
+      else if(i>=noPred && i<noPred+noPrey)
+      {
+        cout<<"-- deriving preys["<<i<<"] "<<preys[i-noPred]<<endl;
+        agents[i] = preys[i-noPred];
+        agents[i]->speciesType = PREY;
+      }
+      else if(i>=noPred+noPrey)
+      {
+        cout<<"-- deriving snacks["<<i<<"] "<<snacks[i-(noPred+noPrey)]<<endl;
+        agents[i] = snacks[i-(noPred+noPrey)];
+        agents[i]->speciesType = SNACK;
+        // cout<<"snack species type"<<agents[i]->speciesType<<endl;
+      }
+    }
+
+    cout << "----- Getting grid and agents to be accessible to all agents" << endl;
+    for(int i=0; i<agentNo; i++)
+    {
+      cout<<"grid "<<i<<endl;
+      agents[i]->getGrid(grid);
+      // cout<<"Agents"<<i<<endl;
+      agents[i]->getAgents(agents, agentNo);
+      // cout<<"terrain"<<i<<endl;
+      agents[i]->getTerrain(terrain);
+    }
 
     cout<<"*********************** Begin SDL OpenGL ***********************"<<endl;
 
@@ -131,7 +225,7 @@ int main(int argc, char**argv)
         exit(1);
     }
 
-    SDL_CreateWindowAndRenderer(800, 800, SDL_WINDOW_OPENGL, &displayWindow, &displayRenderer);
+    SDL_CreateWindowAndRenderer(1024, 786, SDL_WINDOW_OPENGL, &displayWindow, &displayRenderer);
 
     SDL_GetRendererInfo(displayRenderer, &displayRendererInfo);
     // Check that we have OpenGL
@@ -147,7 +241,7 @@ int main(int argc, char**argv)
     initOpenGL();
 
     // setup viewport
-    setViewport(800, 800);
+    setViewport(1024, 786);
 
     // --------------------- SIMULATION BLOCK
     cout<<"------- SIMULATION BLOCK STARTED"<<endl;
@@ -183,8 +277,13 @@ int main(int argc, char**argv)
             grid->render();
             terrain->render(camera->getPosition());
 
-            moveable->update();
-            moveable->render();
+            // agents update
+            for(int i=0; i<agentNo; i++)
+            {
+              // cout<<"agent "<<i<<endl;
+              agents[i]->update();
+              agents[i]->render();
+            }
           glPopMatrix();
 
           // Update window with OpenGL rendering
@@ -200,10 +299,26 @@ int main(int argc, char**argv)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     cout<<"------- Cleaning Up Memory"<<endl;
-    //delete moveable;
 
-    cout<<"---- deleting terrain"<<endl;
-    delete terrain;
+    cout<<"---- deleting predators"<<endl;
+    // for(int i = 0; i < noPred; i++)
+    //   predators[i]->~Predator();
+    delete[] predators;
+
+    cout<<"---- deleting preys"<<endl;
+    // for(int i = 0; i < noPrey; i++)
+    //   preys[i]->~Prey();
+    delete[] preys;
+
+    cout<<"---- deleting snacks"<<endl;
+    // for(int i = 0; i < noSnack; i++)
+    //   snacks[i]->~Snack();
+    delete[] snacks;
+
+    cout<<"---- deleting agents"<<endl;
+    // for(int i = 0; i < agentNo; i++)
+    //   delete agents[i]; // calls each ~Agent()
+    delete[] agents; // delete the heap memory
 
     cout<<"---- deleting grid"<<endl;
     delete grid;
@@ -211,11 +326,11 @@ int main(int argc, char**argv)
     cout<<"---- deleting camera"<<endl;
     delete camera;
 
+    cout<<"---- deleting terrain"<<endl;
+    delete terrain;
+
     // Destroy window
     SDL_DestroyWindow(displayWindow);
-
-    // delete displayRenderer;
-    // delete displayWindow;
 
     displayRenderer = NULL;
     displayWindow = NULL;
@@ -224,58 +339,6 @@ int main(int argc, char**argv)
     SDL_Quit();
 
    return 0;
-}
-
-
-
-void drawCube(Vector3f pos, float red, float green, float blue)
-{
-	mCube.identity();
-	mCube.translate(pos.x, pos.y, pos.z);
-	//glLoadMatrixf(mCube.matrix);
-	glMultMatrixf(mCube.matrix);
-	//mCube.print();
-
-	glColor3f(red, green, blue);
-
-		glBegin(GL_QUADS);
-		// Front Face
-		glNormal3f( 0.0f, 0.0f, 1.0f);
-		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
-		glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
-		glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
-		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
-		// Back Face
-		glNormal3f( 0.0f, 0.0f,-1.0f);
-		glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
-		glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f,  1.0f, -1.0f);
-		glTexCoord2f(0.0f, 1.0f); glVertex3f( 1.0f,  1.0f, -1.0f);
-		glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f, -1.0f, -1.0f);
-		// Top Face
-		glNormal3f( 0.0f, 1.0f, 0.0f);
-		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f, -1.0f);
-		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
-		glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
-		glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f, -1.0f);
-		// Bottom Face
-		glNormal3f( 0.0f,-1.0f, 0.0f);
-		glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
-		glTexCoord2f(0.0f, 1.0f); glVertex3f( 1.0f, -1.0f, -1.0f);
-		glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
-		glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
-		// Right Face
-		glNormal3f( 1.0f, 0.0f, 0.0f);
-		glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f, -1.0f);
-		glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f, -1.0f);
-		glTexCoord2f(0.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
-		glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
-		// Left Face
-		glNormal3f(-1.0f, 0.0f, 0.0f);
-		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
-		glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
-		glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
-		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f, -1.0f);
-	glEnd();
 }
 
 void setupAmbientLight()
@@ -353,7 +416,7 @@ void checkKeyPress()
           // cout<<"camera pitchup"<<endl;
           camera->pitchDown();
         }
-        if ( event.key.keysym.sym == SDLK_x )
+         if ( event.key.keysym.sym == SDLK_x )
         {
           // cout<<"camera pitch down"<<endl;
           camera->pitchUp();
@@ -389,25 +452,6 @@ void checkKeyPress()
   	      terrain->setViewRange(-10);
   	      // cout<<"minus"<<endl;
         }
-      }
-
-
-      // MOVE THE BOX
-  	  if ( event.key.keysym.sym == SDLK_i )
-      {
-        moveable->moveForward(0.01f);
-      }
-  	  if ( event.key.keysym.sym == SDLK_k )
-      {
-        moveable->moveBackward(0.01f);
-      }
-  	  if ( event.key.keysym.sym == SDLK_j )
-      {
-        moveable->rotateLeft(0.9f);
-      }
-  	  if ( event.key.keysym.sym == SDLK_l )
-      {
-        moveable->rotateRight(0.9f);
       }
 
       // --------------------------- KEYUP HANDLER
