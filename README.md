@@ -29,9 +29,9 @@ The code presented here is now a 'systems-level' development, as a continuation 
 ## [C++ OBJECT ORIENTED PROGRAMMING BASIC INTEGRATING SDL and OPENGL](https://github.com/drecuk/ABM-Basics-OOP)
 
 ## SYSTEMS INTEGRATION AND SCALABILITY
-- Quadtree Terrain
-- Octree Agent-Interaction
-- GPU Accelerated Interaction Processing with CUDA
+- [Quadtree Terrain](https://github.com/drecuk/QuadtreeTerrain)
+- [Quadtree Agent-Interaction](https://github.com/drecuk/QuadtreeAgentInteraction)
+- GPU Accelerated Interaction Processing with CUDA (to be developed)
 
 ## ACKWNOWLEDGEMENTS
 “This project has received funding from the European Research Council (ERC) under the European Union’s Horizon 2020 research and innovation programme ( ERC funded project No. 670518 LOST FRONTIERS)”
