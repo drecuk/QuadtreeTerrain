@@ -32,3 +32,6 @@ The code presented here is now a 'systems-level' development, as a continuation 
 - Quadtree Terrain
 - Octree Agent-Interaction
 - GPU Accelerated Interaction Processing with CUDA
+
+## ACKWNOWLEDGEMENTS
+“This project has received funding from the European Research Council (ERC) under the European Union’s Horizon 2020 research and innovation programme ( ERC funded project No. 670518 LOST FRONTIERS)”
